@@ -2,13 +2,16 @@ var api = require('../utils/api');
 
 import { 
   UPDATE_MY_CURRENT_WORMHOLE,
+  // testing
+  UPDATE_CURRENT_WORMHOLE,
   UPDATE_MY_CURRENT_SUBMISSION,
   UPDATE_MY_CURRENT_WORMHOLE_LIST,
   GET_USER_INFO,
   SET_CURRENT_USER,
   TOGGLE_ANIMATING,
   SET_CLICKED_USER,
-  TOGGLE_PEEK_CLICKED_USER
+  TOGGLE_PEEK_CLICKED_USER,
+  CREATE_WORMIE
 } from '../constants/actions';
 
 export function updateMyCurrentWormhole(wormhole) {
@@ -41,6 +44,18 @@ export function getUserInfo(id) {
     return api.getUserDetails(id)
       .then(function (res) {
         dispatch(setClickedUser(res));
+      });
+  }
+}
+
+export function getUserDetailsForLoggedInUser() {
+
+  return dispatch => {
+      return api.fetchFacebookProfileFromFacebook((res) => {
+        return api.getUserDetailsByFacebookID(res.id)
+              .then((res) => {
+                dispatch(setCurrentUser(res));
+        });
       });
   }
 }
@@ -128,3 +143,11 @@ export function toggleAnimating(isAnimating) {
     });
   }
 }
+
+export function updateCurrentWormhole(wormhole) {
+  return {
+    type: UPDATE_CURRENT_WORMHOLE,
+    wormhole: wormhole
+
+  };
+};

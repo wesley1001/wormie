@@ -4,9 +4,10 @@ import FeedList from '../components/FeedList';
 import * as FeedListActions from '../actions/feedList';
 
 function mapStateToProps(state) {
-	// console.log('feed state!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ', state);
   return {
-    feed: state.feed,
+    feed: state.feed.list,
+    // object {latitude: , longitude: }
+    currentLocation: state.feed.location,
     currentUser: state.userProfile.currentUser,
     peekClickedUser: state.profile.peekClickedUser,
   };

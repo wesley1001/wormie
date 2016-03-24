@@ -22,7 +22,7 @@ var api = {
 	    // body: JSON.stringify({ "title": "fat ugly face party party at ikea", "latitude":50, "longitude": 35, "deadline":"2015-12-09T23:37:58.271497Z", "notes":"make it phat", "status": "zip line", "requestor": 2})
 	  })
 	  .then((res, a) => {
-	  	// console.log('got this back from server on wormhole create post', res, a);
+	  	console.log('catdog got this back from server on wormhole create post', res, a);
 	  	return res.json();
 	  })
 	  ;
@@ -40,9 +40,10 @@ var api = {
 	},
 
 	getWormholeDetails(id) {
-		return fetch(`${urls.wormholes}/${id}`)
-		.then((res) => res.json())
-		;
+		return fetch(`${urls.wormholes}${id}`)
+			.then((res) => {
+				return res.json();
+			});
 	},
 
 	updateWormholeDetails(wormholeId, wormholeData) {
@@ -57,7 +58,6 @@ var api = {
 	  })
 	  .then((res) => {
 	  	// console.log('just head back from the put, and they said: ', res);
-	  	res
 	  })
 	  ;
 	},
@@ -110,8 +110,8 @@ var api = {
 
 	getUserDetailsByFacebookID(fb_id) {
 		console.log("getUserDetailsByFacebookID");
-		console.log(`${urls.usersByFacebookID}/${fb_id}`);
-		return fetch(`${urls.usersByFacebookID}/${fb_id}`)
+		console.log(`${urls.usersByFacebookID}${fb_id}`);
+		return fetch(`${urls.usersByFacebookID}${fb_id}`)
 		.then((res) => res.json())
 		;
 	},
@@ -172,6 +172,49 @@ var api = {
 	},
 
 	/*
+	/	 Update wormhole and submission likes for a given user 
+	*/
+	updateLikes(currentUser, currentWormhole) {
+
+		// PUT overwrites data, so need to include existing likes
+		var wormholeLikes = currentUser.wormhole_likes;
+		var submissionLikes = currentUser.submission_likes;
+
+		// the new likes
+		var wormholeID = currentWormhole.id;
+		var submissionID = currentWormhole.submissions[0].id;
+
+		// Add the new likes to the existing likes
+		wormholeLikes.push(wormholeID);
+		submissionLikes.push(submissionID);
+
+		var data = {
+			"wormhole_likes": wormholeLikes,
+			"submission_likes": submissionLikes
+		}
+
+		var accountID = currentUser.account_id;
+
+		console.log("9999999999999999999999999");
+		console.log(data);
+
+		return fetch(`${urls.accounts}${accountID}/`, {
+			method: 'put',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data)
+		})
+		.then((res) => {
+			console.log(res);
+			res.json();
+		})
+
+	},
+
+
+
+	/*
 	/	 Convert facebook token to Oauth2, create new User in database
 	*/
 	convertToken(tokenData) {
@@ -211,9 +254,61 @@ var api = {
 		// Invoke the fetchProfileRequest
     return fetchProfileRequest.start();
 	
-	}
+	},
+
+	/*
+	 Sorting and filtering
+	 */
+
+	filterByStatus(status) {
+		var url = urls.filter + '?status=' + status;
+		return fetch(urls.filterByStatus, {
+			method: 'GET'
+		})
+		.then(function (data) {
+			res.json();
+		})
+		.catch(function (err) {
+			console.log(err);
+		})
+	},
+
+	sortList(criteria, longitude, latitude) {
+		var url = `${urls.sortBy}?sort_by=${criteria}`;
+		if (longitude) {
+			url += `&longitude=${longitude}`
+		}
+		if (latitude) {
+			url += `&latitude=${latitude}`
+		}
+		console.log(url);
+		return fetch(url, {
+			method: 'GET'
+		})
+		.then((res) => res.json())
+		.catch(function (err) {
+			console.log(err);
+		})
+	},
 
 	// TODO: Add a refresh token API call using the stored refresh OAuth2 token
+
+	// 
+
+	createWormie(hexcode) {
+		console.log("$$$$$$$$$$$$$$$$");
+		console.log("url is: ", `${urls.createWormie}${hexcode}`);
+		return fetch(`${urls.createWormie}${hexcode}`)
+		.then((res) => {
+			console.log("Wormie color created");
+		})
+		.catch((err) => {
+			console.log("error creating wormie color");
+			console.error(err);
+		});
+	},
+
+	// createHeart
 
 };
 

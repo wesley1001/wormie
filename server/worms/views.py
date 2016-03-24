@@ -12,6 +12,12 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ParseError
 from rest_framework import status, generics, permissions
 from rest_framework.authtoken.models import Token
+
+# 
+from worms.yelp import yelpMain
+from worms.distance import distanceMain
+from rest_framework.decorators import api_view
+import json
 # from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope, TokenHasScope
 
 #############################
@@ -28,6 +34,10 @@ class WormholeList(APIView):
     """
 
     def get(self, request, format=None):
+        # status = APIView.GET.get('status','')
+        # print(status)
+        print('wormholelist')
+        print(Wormhole.objects.all())
         wormholes = Wormhole.objects.all()
         serializer = WormholeSerializer(wormholes, many=True)
         return Response(serializer.data)
@@ -284,3 +294,76 @@ class AccountDetail(APIView):
         account = self.get_object(pk)
         account.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+#############################
+# DISCOVER(YELP)
+#############################
+
+
+@api_view(['GET', 'POST'])
+
+def yelp_list(request):
+
+    """
+    List all snippets, or create a new snippet.
+    """
+    
+    print('inside yelpmain in view.py')
+    term = request.GET.get('term','')
+    location = request.GET.get('location','')
+    category_filter = request.GET.get('category_filter','')
+    if request.method == 'GET':
+        yelp_data = yelpMain(category_filter, term, location)
+        return Response(yelp_data)
+
+
+#############################
+# SORTING
+#############################
+
+
+@api_view(['GET', 'POST'])
+def sorted_list(request):
+
+    """
+    Sorting criteria: nearby, recent
+    """
+
+    sorting_criteria = request.GET.get('sort_by', '')
+
+    if request.method == 'GET':
+        
+        if sorting_criteria == 'recent':
+            wormholes = Wormhole.objects.all()
+            serializer = WormholeSerializer(wormholes, many=True)
+            return Response(serializer.data)
+
+        elif sorting_criteria == 'popular':
+            wormholes = Wormhole.objects.all()
+            serializer = WormholeSerializer(wormholes, many=True).data
+
+            # sort by like
+            sortedWormholes = sorted(serializer, key=lambda worm: worm.likers[0])
+            return Response(sortedWormholes)
+
+        elif sorting_criteria == 'nearby':
+            wormholes = Wormhole.objects.all()
+            serializer = WormholeSerializer(wormholes, many=True).data
+
+            lon2 = request.GET.get('longitude', '')
+            lat2 = request.GET.get('latitude', '')
+
+            # loop through wormholes and add distance key for each wormhole
+            for worm in serializer:
+                lon1 = worm.get('longitude')
+                lat1 = worm.get('latitude')
+                dist = distanceMain(lon1, lat1, lon2, lat2)
+                worm.distance = dist
+
+            # sort by distance
+            sortedWormholes = sorted(serializer, key=lambda worm: worm.distance)
+            return Response(sortedWormholes)
+
+

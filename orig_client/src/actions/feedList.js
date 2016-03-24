@@ -1,4 +1,12 @@
-import { SET_CLICKED_USER, SET_CURRENT_USER, UPDATE_CURRENT_WORMHOLE, UPDATE_FEED, COPY_CURRENT_USER,  TOGGLE_PEEK_CLICKED_USER, } from '../constants/actions';
+import { 
+  SET_CLICKED_USER, 
+  SET_CURRENT_USER, 
+  UPDATE_CURRENT_WORMHOLE, 
+  UPDATE_FEED, 
+  COPY_CURRENT_USER, 
+  TOGGLE_PEEK_CLICKED_USER,
+} from '../constants/actions';
+
 import api from '../utils/api';
 
 export function updateCurrentWormhole(wormhole) {
@@ -27,7 +35,7 @@ export function refreshFeedDataAction(data) {
 };
 
 export function setClickedProfile(data) {
-  console.log('feedlist data plz', data);
+  // console.log('feedlist data plz', data);
   return {
     type: SET_CLICKED_USER,
     userData: data
@@ -51,3 +59,36 @@ function checkClickedUser() {
     status: true
   }
 }
+
+function refreshFeedDataAction(data) {
+  return {
+    type: UPDATE_FEED,
+    data: data
+  };
+};
+  
+export function refreshFeedAsyncStorage(asyncStorage) {
+  return dispatch => {
+    return api.getWormholeList()
+    .then((res) => {
+      // console.log('orangedog this is what i got back from wormhole list', res);
+      return asyncStorage.setItem('feedData_all', JSON.stringify(res));
+    })
+    .then(() => {
+      // console.log('redface2222');
+      dispatch(refreshFeedData_fromAsyncStorage(asyncStorage));
+    })
+  }
+};
+
+export function refreshFeedData_fromAsyncStorage(asyncStorage, cb) {
+  return dispatch => {
+    return asyncStorage.getItem('feedData_all')
+    .then((data) => {
+      // console.log('frogcat this is the information from async storage', data);
+      dispatch(refreshFeedDataAction(JSON.parse(data)));
+      if(cb) {cb()}
+    })
+  }
+};
+

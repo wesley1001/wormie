@@ -22,7 +22,7 @@ var styles = StyleSheet.create({
   container:{
     marginBottom: 49,
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#f4f4f4',
     alignSelf: 'stretch',
     justifyContent: 'center',
   },
@@ -35,29 +35,15 @@ var styles = StyleSheet.create({
     alignSelf: 'center'
   },
   badgeContainer: {
-    marginTop: 10, 
-    marginBottom: -20, 
+    // marginTop: 10, 
+    // paddingTop: 20,
+    marginBottom: -25, 
     alignSelf: 'stretch', 
     flexDirection: 'row'
   }
 });
 
 class Profile extends Component{
-        // <MyWormholes 
-        //   wormholes = {this.props.wormholes}
-        //   updateCurrentWormhole = {this.props.updateMyCurrentWormhole}
-        //   updateMyCurrentWormhole = {this.props.updateMyCurrentWormhole}
-        //   myCurrentWormhole = {this.props.myCurrentWormhole}
-        //   navigator = {this.props.navigator}
-        // />
-        // <MySubmissions
-        //   submissions = {this.props.submissions}
-        //   updateMyCurrentSubmission = {this.props.updateMyCurrentSubmission}
-        //   updateCurrentSubmission = {this.props.updateMyCurrentSubmission}
-        //   myCurrentSubmission = {this.props.myCurrentSubmission}
-        //   navigator = {this.props.navigator}
-        // />
-        // <ScrollableTabView renderTabBar={() => <CustomTabBar someProp={'here'} />}>
   componentWillMount() {
     let { peekClickedUser, setClickedProfile, currentUser } = this.props;
     // if there is no clicked user(friends/others)
@@ -67,14 +53,11 @@ class Profile extends Component{
       setClickedProfile(currentUser);
     // this will be set from feedlist
     } 
-    // else {
-    //   setClickedProfile(clickedUser);
-    // }
   }
 
   // TODO: updateProfile
   topbar() {
-    let { profile, stopClickedUser, currentUser, clickedUser, fromFeed } = this.props;
+    let { profile, currentUser, clickedUser, fromFeed } = this.props;
     // toggle peek_clicked_user(friends/others)
     console.log('current username: ',currentUser.username);
     console.log('clicked user: ', clickedUser.username);
@@ -83,19 +66,24 @@ class Profile extends Component{
     // if clicked user === current user
     // if the request is not from feedlist
     if ( (clickedUser && !fromFeed && (clickedUser.username == currentUser.username )) || (profile === 'true')) {
-      return <View />
+      return (
+        <View>
+          <Topbar 
+            topbarTitle={'Profile'}
+            noIcon={true}
+            navigator={this.props.navigator}
+          />
+        </View>
+      )
 
     // if the request if from feedList
     } else {
       console.log('topbar!!!')
       return (
-        <View
-          style={{paddingTop: 20, flex: 0.07}}
-        >
+        <View>
           <Topbar 
             topbarTitle={clickedUser.username}
             navigator={this.props.navigator}
-            stopClickedUser={this.props.stopClickedUser}
           />
         </View>
       );
@@ -141,17 +129,22 @@ class Profile extends Component{
       clickedUser,
       submissions
     } = this.props;
+        // { this.topbar() }
     return (
       //use {} for anything that is not html or text. this allows you to run JS in JSX
       <View style={styles.container}>
-        { this.topbar() }
         <View 
           style={styles.badgeContainer}
         >
           { this.badge() }
         </View>
         <ScrollableTabView
-          style={{flexWrap: 'wrap'}}>
+          tabBarBackgroundColor='#4CC6EA'
+          tabBarActiveTextColor='white'
+          tabBarInactiveTextColor='#62ebff'
+          tabBarUnderlineColor='#00ADC7'
+          style={{flexWrap: 'wrap'}}
+          >
           <MyWormholes 
             tabLabel="Wormholes"
             {...this.props}

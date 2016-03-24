@@ -1,4 +1,3 @@
-/************ PROFILE *************/
 import React, {
   Text,
   View,
@@ -17,15 +16,32 @@ var styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
+  notes: {
+    margin: 8, 
+    borderRadius: 5, 
+    fontFamily: 'Lato-Bold',
+    color: '#0090a5', 
+    fontSize: 15, 
+    paddingLeft: 2,
+  },
   image: {
     height: 350
   },
+  noteContent: {
+    backgroundColor: '#f0f0f0', 
+    color: '#585858', 
+    fontSize: 15, 
+    fontFamily: 'Lato-Regular', 
+    padding: 10, 
+    paddingTop: -3
+  },
   buttonText: {
-    fontSize: 15,
-    color: '#39247f',
+    fontSize: 18,
+    color: '#00ADC7',
     alignSelf: 'flex-start',
     flex: 1,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   submissionList: {
     flex: 1,
@@ -38,8 +54,10 @@ var styles = StyleSheet.create({
     flexDirection: 'column',
     color: '#444444',
     flex: 1,
-    paddingLeft: 0,
-    marginBottom: 5
+    marginBottom: 5,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingBottom: 10,
   },
 });
 
@@ -62,29 +80,45 @@ class MySubmissions extends Component{
   // if function returns jsx/array of jsx, it does not take .bind(this)
   createList() {
     var { submissions } = this.props;
-    return submissions.map((submission, index) => {
-      console.log(submission);
-      return (
-        <View 
-          key={index}
-          style={styles.submissionList}
-        >
-          <TouchableHighlight
-            onPress = {this.viewRequest.bind(this, index)}
-            underlayColor = 'rgba(125,125,125,0.2)'
-            style={styles.submission}
+    if (submissions) {
+      return submissions.map((submission, index) => {
+        console.log(submission);
+        let imageUrl = `https://i.ytimg.com/vi/${submission.video_url}/mqdefault.jpg`;      
+        return (
+          <View 
+            key={index}
+            style={styles.submissionList}
           >
-            <View>
-              <Text style={styles.buttonText}>{submission.wormhole.title} </Text>
-              <Text style={{fontWeight:'bold'}}>Requester's notes:</Text> 
-              <Text>{submission.wormhole.notes} </Text>
-              <Text style={{fontWeight:'bold'}}>My notes:</Text>
-              <Text>{submission.notes} </Text>
-            </View>
-          </TouchableHighlight>
-        </View>
-      );
-    });
+            <TouchableHighlight
+              onPress = {this.viewRequest.bind(this, index)}
+              underlayColor = 'rgba(125,125,125,0)'
+              style={styles.submission}
+            >
+              <View>
+                <Text style={styles.buttonText}>{submission.wormhole.title} </Text>
+                <Image 
+                  style = {{alignSelf: 'stretch', height: 220, backgroundColor: 'transparent', marginBottom: 0}}
+                  source = {{uri: imageUrl}}
+                />
+                <View style={{ backgroundColor: '#f0f0f0', flex:1, flexDirection: 'row'}}>
+                  <Text style={styles.notes}>Requester's Notes</Text>
+                </View>
+                <Text style={styles.noteContent}>
+                  {submission.wormhole.notes}
+                </Text>
+                <View style={{ backgroundColor: '#f0f0f0', flex:1, flexDirection: 'row'}}>
+                  <Text style={styles.notes}>My Notes</Text>
+                </View>
+                <Text style={styles.noteContent}>
+                  {submission.notes}
+                </Text>
+              </View>
+            </TouchableHighlight>
+          </View>
+        );
+      });
+    }
+    return <View />
   }
 
   handleScroll(e) {

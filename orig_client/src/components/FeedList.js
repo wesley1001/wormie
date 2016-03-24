@@ -7,26 +7,46 @@ import React, {
   Component,
   TouchableHighlight,
   Image,
+  AsyncStorage,
 } from 'react-native';
+
+// var GoogleStaticMap = require('../utils/GoogleStaticMap');
 
 import ViewRequest from '../containers/ViewRequest';
 import OpenWormhole from '../containers/OpenWormhole';
 import Profile from '../containers/Profile';
 
+// import MapFeed from './MapFeed';
+// Mapbox
+var Mapbox = require('react-native-mapbox-gl');
+var mapboxConfig = require('../utils/mapboxConfig');
+var mapRef = 'mapRef';
+
 var YouTube = require('react-native-youtube');
 var Video = require('react-native-video');
+var urls = require('../constants/urls');
 
-class FeedList extends React.Component{
+var FeedList = React.createClass({
+
+  mixins: [Mapbox.Mixin],
+
   componentWillMount() {
-    let { peekClickedUser, setClickedProfile, currentUser, refreshFeedData, clickedUser } = this.props;
-    refreshFeedData();
+    let { peekClickedUser, setClickedProfile, currentUser, refreshFeedData_fromAsyncStorage } = this.props;
+    // refreshFeedData();
+    // refreshFeedData_fromAsyncStorage(AsyncStorage);
     // if there is no clicked user(friends/others)
     if (!peekClickedUser) {
-      console.log('hit feed list no peekClickedUser', currentUser);
+      // console.log('hit feed list no peekClickedUser', currentUser);
       // set currentUser to clickedUser
       setClickedProfile(currentUser);
     }
-  }
+
+  },
+  componentDidMount() {
+    let { refreshFeedData_fromAsyncStorage, } = this.props;
+    // refreshFeedData_fromAsyncStorage(AsyncStorage);
+    
+  },
   viewRequest(index) {
     var { feed, updateCurrentWormhole } = this.props;
     // console.log('trying to view request: ', index, feed[index]);
@@ -40,34 +60,26 @@ class FeedList extends React.Component{
         component: OpenWormhole,
       });
     }
-  }
+  },
   _renderVideo(item, index) {
-    // console.log('rendering video', item.submissions[0]);
     if(item.submissions[0]) {
+      let imageUrl = `https://i.ytimg.com/vi/${item.submissions[0].video_url}/mqdefault.jpg`;
       return (
-        <YouTube 
-          videoId={item.submissions[0].video_url}
-          play={false}
-          hidden={false}
-          playsInline={true}
-          showinfo={false}
-          modestbranding={true}
-          onError={(e)=>{console.log('youtube error: ', e.error)}}
-          style={{alignSelf: 'stretch', height: 220, backgroundColor: 'transparent', marginBottom: 0}}
+        <Image 
+          style = {{alignSelf: 'stretch', height: 220, backgroundColor: 'transparent', marginBottom: 0}}
+          source = {{uri: imageUrl}}
         />
       );
     }else {
+      let imageUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${item.latitude},${item.longitude}&zoom=10&size=400x280&markers=icon:${encodeURIComponent(urls.getWormie+item.requestor.wormie_color.slice(1)+'.png')}%7C${item.latitude},${item.longitude}&key=AIzaSyAwp0Qycaz0CVQfNaNd4FtWew4tK3DRY9w`;
       return (
-        <TouchableHighlight onPress={this.viewRequest.bind(this, index)}>
-          <Image 
-            style={{height: 220, width: 390, flex: 1}}
-            source = {require('../assets/dsnWormhole.jpg')}
-          />
-        </TouchableHighlight>
+        <Image 
+          style = {{height: 220}}
+          source = {{uri: imageUrl}}
+        />
       );
     }
-  }
-              // this.viewProfile.bind(this)
+  },
   _showRequestorOnCard(item) {
     let { getUserInfo } = this.props;
     if(item.submissions[0]) {
@@ -75,10 +87,6 @@ class FeedList extends React.Component{
         <View style = {styles.row}>
           <TouchableHighlight
             onPress={()=>{
-              console.log('submission', item.submissions[0]);
-              // get submisster account_id
-              // id(in database) = account_id + 1
-              console.log('submitter', item.submissions[0].submitter['account_id']);
               var id = item.submissions[0].submitter['account_id'] + 1;
               getUserInfo(id, () => {
                 this.props.navigator.push({
@@ -103,7 +111,7 @@ class FeedList extends React.Component{
       return (<View />);
     }
 
-  }
+  },
   _timeSince(date) {
 
       var seconds = Math.floor((new Date() - date) / 1000);
@@ -130,33 +138,35 @@ class FeedList extends React.Component{
           return interval + "m";
       }
       return Math.floor(seconds) + "s";
-  }
+  },
 
   render() {
-    var { feed, getUserInfo } = this.props;
-    var list = feed.map((item, index) => {
-      // console.log(item);
+
+    var { feed, getUserInfo, filterByStatus, sortList } = this.props;
+    var list = feed.slice(0, 15).map((item, index) => {
       return (
         <View key = {index}>
           <TouchableHighlight
             style = {styles.loginButton}
             onPress = {this.viewRequest.bind(this, index)}
           >
-            <View style={[styles.cardTitleContainer, styles.row]}>
-              <Text style = {styles.cardTitle}> {item.title} </Text>
-              <View style={styles.spaceBuffer} />
-              <Text style = {styles.cardDate}> {this._timeSince(Date.parse(item.created_at))} </Text>
+            <View style = {{flex: 1}}>
+              <View style={[styles.cardTitleContainer, styles.row]}>
+                <Text style = {styles.cardTitle}> {item.title} </Text>
+                <View style={styles.spaceBuffer} />
+                <Text style = {styles.cardDate}> {this._timeSince(Date.parse(item.created_at))} </Text>
+              </View>
+              {this._renderVideo(item, index)}
             </View>
           </TouchableHighlight> 
-          {this._renderVideo(item, index)}
           <View style={styles.cardInfoContainer}>
             <View style = {styles.row}>
               <TouchableHighlight
                 onPress={()=>{
-                  console.log('requests', item);
+                  // console.log('requests', item);
                   // get submisster account_id
                   // id(in database) = account_id + 1
-                  console.log('requestor id', item.requestor['account_id'] + 1);
+                  // console.log('requestor id', item.requestor['account_id'] + 1);
                   var id = item.requestor['account_id'] + 1;
                   getUserInfo(id, () => {
                     this.props.navigator.push({
@@ -183,35 +193,37 @@ class FeedList extends React.Component{
       );
     });
 
-    // <View style = {styles.row}>
-    //             <Image 
-    //               style = {[styles.profilePic, styles.marginLeft]}
-    //               source = {{uri: item.requestor.picture_url}}
-    //             />
-    //             <Text style = {styles.cardRequestor}> {item.requestor.username} </Text>
-    //           </View>
-          
     return (
       //use {} for anything that is not html or text. this allows you to run JS in JSX
       <ScrollView 
         automaticallyAdjustContentInsets={false}
-        onScroll={() => { console.log('onScroll!'); }}
         scrollEventThrottle={200}
         style={styles.container}>
         {list}
+        <View
+          style={{
+            position: 'absolute',
+            flex: 1,
+            top: 30,
+            left: 5,
+            backgroundColor: 'red',
+          }}
+        >
+        </View>
       </ScrollView>
     );
-  }
-};
+  },
+});
 
 var styles = StyleSheet.create({
   container:{
-    marginTop: 20,
-    marginBottom: 49,
     flex: 1,
-    backgroundColor: 'white'
+    backgroundColor: 'white',
+    marginTop: 3,
+    marginBottom: 50,
   },
   buttonText: {
+    fontFamily: 'Lato-Regular',
     fontSize: 24,
     color: 'black',
     alignSelf: 'center'
@@ -224,18 +236,21 @@ var styles = StyleSheet.create({
     backgroundColor: 'white'
   },
   cardTitle: {
-    fontSize: 20,
+    fontFamily: 'Lato-Semibold',
+    fontSize: 18,
     color: 'black',
   },
   cardLocation: {
     color: 'black',
   },
   cardRequestor: {
+    fontFamily: 'Lato-Regular',
     marginLeft: 5,
     flex: 1,
     color: 'black',
   },
   cardSubmitter: {
+    fontFamily: 'Lato-Regular',
     marginRight: 5,
     flex: 1,
     color: 'black',
@@ -272,7 +287,7 @@ var styles = StyleSheet.create({
     marginRight: 7,
   },
   spaceBuffer: {
-    flex: 2
+    flex: 2,
   },
   backgroundVideo: {
     alignSelf: 'stretch',
